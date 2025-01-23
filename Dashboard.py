@@ -5,7 +5,6 @@ from dash.dependencies import Input, Output
 import plotly.express as px
 import sqlite3
 
-
 class DashboardComponent:
     def __init__(self, db_file):
         self.db_file = db_file
