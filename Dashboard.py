@@ -49,7 +49,7 @@ class BarGraph(DashboardComponent):
 
 
 class PieLineCharts(DashboardComponent):
-    def update(self, centers):
+    def update(self, centers, course):
         # Fetch data for selected centers
         query = "SELECT Center, `Course A`, `Course B`, `Course C`, `Course D`, `Course E` FROM Center_Data"
         if centers:
@@ -63,16 +63,24 @@ class PieLineCharts(DashboardComponent):
             return px.pie(title="No Data Available"), px.line(title="No Data Available")
 
         # Pie Chart
-        df_pie = {row[0]: sum(row[1:]) for row in data}
+        if course:
+            # If a course is selected, show percentages for the selected course
+            df_pie = {row[0]: row[columns.index(course)] for row in data}
+            pie_title = f"{course} Progress by Center"
+        else:
+            # If no course is selected, show total progress
+            df_pie = {row[0]: sum(row[1:]) for row in data}
+            pie_title = "Total Progress by Center"
+
         pie_fig = px.pie(
             names=list(df_pie.keys()),
             values=list(df_pie.values()),
-            title="Total Progress by Center",
+            title=pie_title,
             color_discrete_sequence=px.colors.qualitative.Pastel,
         )
         pie_fig.update_traces(marker=dict(line=dict(color='#ffffff', width=2)))
 
-        # Line Chart
+        # Line Chart (unchanged)
         centers = [row[0] for row in data]
         line_data = {col: [row[i + 1] for row in data] for i, col in enumerate(columns[1:])}
         line_fig = px.line(
@@ -86,7 +94,6 @@ class PieLineCharts(DashboardComponent):
             line_fig.data[i].name = col  # Set legend names
 
         return pie_fig, line_fig
-
 
 class DropdownComponent(DashboardComponent):
     def update(self, centers):
@@ -234,7 +241,7 @@ class DashboardApp:
 
         self.app.callback(
             [Output("pie-chart", "figure"), Output("line-chart", "figure")],
-            [Input("center-checklist", "value")],
+            [Input("center-checklist", "value"), Input("Course_dropdown", "value")],
         )(self.pie_line_charts.update)
 
         def update_center_checklist(self, _):
