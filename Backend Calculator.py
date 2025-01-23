@@ -1,5 +1,4 @@
 import pandas as pd
-# Hiii
 def update_course_counts(Center_Overview, student_data):
     # Debug: Print initial state of Center_Overview
     print("\nBefore update:\n", Center_Overview.head())
