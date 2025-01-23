@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+<style>
+    body {
+        background-color: #fff5d1;
+        font-family: 'Georgia', sans-serif;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+    }
+
+    .auth-container {
+        background-color: #6873af;
+        padding: 40px;
+        border-radius: 8px;
+        color: #fff;
+        width: 400px;
+        text-align: center;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+        text-align: left;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: #fff;
+    }
+
+    .form-group input {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #fff;
+        border-radius: 4px;
+        box-sizing: border-box;
+    }
+
+    .auth-btn {
+        background-color: #fff;
+        color: #6873af;
+        padding: 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        width: 100%;
+    }
+
+    .auth-btn:hover {
+        background-color: #ffffffcc;
+    }
+
+    .auth-message {
+        color: maroon;
+        margin-top: 20px;
+    }
+
+    .auth-link {
+        color: #fff;
+        text-decoration: none;
+        margin-top: 15px;
+        display: block;
+    }
+
+    .auth-link:hover {
+        text-decoration: underline;
+    }
+</style>
+
+    <!-- Firebase scripts -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+
+    <script>
+        // Initialize Firebase with your own configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCJpZLb3e2HkVJMWIE2UysRXJtqioJPN00",
+            authDomain: "cs-ia-6f9d4.firebaseapp.com",
+            projectId: "cs-ia-6f9d4",
+            storageBucket: "cs-ia-6f9d4.appspot.com",
+            messagingSenderId: "959763889856",
+            appId: "1:959763889856:web:56e452daf374869a7cb725",
+            measurementId: "G-VLTHF537M4"
+        };
+        const app = firebase.initializeApp(firebaseConfig);
+        function checkEnter(event, callback) {
+            if (event.key === "Enter") {
+                callback();
+            }
+        }
+        function goToRegistration() {
+            window.location.href = "registration.html"; // Replace with your registration page URL
+        }
+    </script>
+</head>
+<body>
+    <div class="auth-container">
+        <h2 style="font-weight: bold;">Login</h2>
+        <!-- ... existing code ... -->
+
+<form id="loginForm">
+    <div class="form-group">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required autocomplete="off" placeholder="email@sample.com">
+    </div>
+    <div class="form-group">
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required onkeyup="checkEnter(event, login)" autocomplete="off" placeholder="6 character password">
+    </div>
+    <button type="button" onclick="login()" class="auth-btn">Login</button>
+</form>
+
+        <div class="auth-message" id="errorMessage"></div>
+
+        <a href="#" class="auth-link" onclick="goToRegistration()">New account? Register here</a>
+    </div>
+
+    <script>
+        function login() {
+            var username = document.getElementById('username').value;
+            var password = document.getElementById('password').value;
+
+            firebase.auth().signInWithEmailAndPassword(username, password)
+                .then((userCredential) => {
+                    window.location.href = "main.html"; // Replace with your main page URL
+                })
+                .catch((error) => {
+                    document.getElementById('errorMessage').innerText = getErrorMessage(error);
+                });
+        }
+
+        function getErrorMessage(error) {
+            switch (error.code) {
+                case "auth/invalid-email":
+                    return "Invalid email. Please enter a valid email address.";
+                case "auth/user-not-found":
+                case "auth/wrong-password":
+                    return "Invalid credentials. Please check your username and password.";
+                case "auth/email-already-in-use":
+                    return "Email is already in use. Please use a different email.";
+                case "auth/weak-password":
+                    return "Weak password. Please use a stronger password.";
+                default:
+                    return "Authentication failed. Please try again.";
+            }
+        }
+    </script>
+</body>
+</html>
+<!---the control z version----->
