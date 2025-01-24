@@ -126,7 +126,7 @@ def generate_pdf(student, graph_figure):
     return pdf_buffer
 # Function to filter out columns starting with "Course"
 def filter_course_columns(header):
-    return [col for col in header if col.startswith("Course")]
+    return [col for col in header if "Course" in col]
 
 # Update the display_page function
 @app.callback(
@@ -143,6 +143,7 @@ def display_page(pathname):
     conn.close()
     if pathname == "/":
         # Display the grid of cards on the first page
+        # Display the grid of cards on the first page
         cards_per_row = 5
         grid_of_cards = [
             dbc.Row(
@@ -154,19 +155,24 @@ def display_page(pathname):
                                     f"{students[j][0]} {students[j][1]}",
                                     href=f"/student/{j}",
                                     id={"type": "student-link", "index": j},
-                                    style={"color": "inherit", "text-decoration": "none", "background-color":"#6873af"},
+                                    style={"color": "inherit", "text-decoration": "none",
+                                           "background-color": "#6873af"},
                                 ),
-                                style={
-                                    "background-color":"#6873af",
-                                    "color":"white"
-                                }),
+                                    style={
+                                        "background-color": "#6873af",
+                                        "color": "white"
+                                    }),
                                 dbc.CardBody(
                                     [
                                         html.P(f"Center: {students[j][2]}"),
                                         html.P("Course Progress:"),
                                         html.Ul(
-                                            [html.Li(f"{filter_course_columns(header)[i]}: {students[j][header.index(filter_course_columns(header)[i])]}%") for i in
-                                             range(len(filter_course_columns(header)))]
+                                            [
+                                                html.Li(
+                                                    f"{filter_course_columns(header)[i]}: {students[j][header.index(filter_course_columns(header)[i])]}%"
+                                                )
+                                                for i in range(len(filter_course_columns(header)))
+                                            ]
                                         ),
                                     ]
                                 ),
@@ -175,10 +181,10 @@ def display_page(pathname):
                         ),
                         width=12 // cards_per_row
                     )
-                    for j in range(i, min(i + cards_per_row, len(students)))
+                    for j in range(i, min(i + cards_per_row, len(students)))  # Properly index cards
                 ]
             )
-            for i in range(0, len(students), cards_per_row)
+            for i in range(0, len(students), cards_per_row)  # Increment i by cards_per_row for each new row
         ]
 
         return grid_of_cards, {'display': 'none'}, "Student Data Display"
@@ -274,53 +280,41 @@ def display_page(pathname):
 def update_chart(pathname, selected_chart_type):
     fig = go.Figure()
 
-    # Check if pathname is correct
     if pathname.startswith("/student/"):
+        # Extract student index from the URL
         student_index = int(pathname.split("/")[-1])
 
-        # Query the database to get the student data
+        # Query the database for the specific student
         with sqlite3.connect('graph_data.db') as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT * FROM Student_Data WHERE ID=?", (student_index,))
             student = cursor.fetchone()
 
-        # Ensure valid student data
         if student:
-            try:
-                if selected_chart_type == 'bar':
-                    # Bar Chart
-                    course_columns = filter_course_columns(header)
-                    fig.add_trace(go.Bar(
-                        x=course_columns,
-                        y=student[header.index(course_columns[0]): header.index(course_columns[-1]) + 1],
-                        name=f"{student[0]} {student[1]}",
-                    ))
-                elif selected_chart_type == 'line':
-                    # Line Chart
-                    course_columns = filter_course_columns(header)
-                    fig.add_trace(go.Scatter(
-                        x=course_columns,
-                        y=student[header.index(course_columns[0]): header.index(course_columns[-1]) + 1],
-                        mode='lines',
-                        name=f"{student[0]} {student[1]}",
-                    ))
+            course_columns = filter_course_columns(header)
+            course_progress = [student[header.index(course)] for course in course_columns]
 
-                # Update the download link with the current student's PDF
-                pdf_buffer = generate_pdf(student, fig)
-                download_link = f"/download-report/{student_index}?chart=true"
+            # Plot the appropriate graph type
+            if selected_chart_type == 'bar':
+                fig.add_trace(go.Bar(
+                    x=course_columns,
+                    y=course_progress,
+                    name=f"{student[0]} {student[1]}",
+                ))
+            elif selected_chart_type == 'line':
+                fig.add_trace(go.Scatter(
+                    x=course_columns,
+                    y=course_progress,
+                    mode='lines+markers',
+                    name=f"{student[0]} {student[1]}",
+                ))
 
-                return fig, download_link
+            # Update the download link with the current student's PDF
+            download_link = f"/download-report/{student_index}?chart=true"
+            return fig, download_link
 
-            except Exception as e:
-                print(f"Error generating chart: {e}")
-                return fig, ""
-
-        else:
-            return fig, ""
-
-    # Return empty figure and link if no valid student data
+    # Default empty figure and no link
     return fig, ""
-
 # Define the callback to handle the download link with chart option
 @app.server.route("/download-report/<int:student_index>")
 def download_report(student_index):
